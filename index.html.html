@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tính điểm lên lớp</title>
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#f5f6fb;--card:#ffffff;--text:#1d2033;--muted:#6a6f8a;--line:#e2e4f0;
+  --accent:#4f46e5;--ok:#15803d;--okbg:#e8f7ee;--bad:#dc2626;--badbg:#fdecec;--warn:#b45309;--warnbg:#fff4e0;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14151f;--card:#1e2030;--text:#eceefb;--muted:#9a9fbd;--line:#32354d;
+    --accent:#818cf8;--ok:#4ade80;--okbg:#17301f;--bad:#f87171;--badbg:#3a1c1c;--warn:#fbbf24;--warnbg:#3a2d12;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14151f;--card:#1e2030;--text:#eceefb;--muted:#9a9fbd;--line:#32354d;
+  --accent:#818cf8;--ok:#4ade80;--okbg:#17301f;--bad:#f87171;--badbg:#3a1c1c;--warn:#fbbf24;--warnbg:#3a2d12;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.45}
+.wrap{max-width:560px;margin:0 auto;padding:18px 12px 40px}
+h1{font-size:22px;margin:6px 4px 2px}
+.sub{color:var(--muted);font-size:14px;margin:0 4px 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:12px}
+input[type=text],input[type=number]{font-family:inherit;font-size:16px;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);width:100%;min-width:0}
+input:focus{outline:2px solid var(--accent);outline-offset:1px}
+input.bad{border-color:var(--bad)}
+.name{font-weight:700}
+.top{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.del{border:0;background:transparent;color:var(--muted);font-size:22px;cursor:pointer;padding:0 6px;line-height:1}
+.ky{margin-top:8px}
+.kt{font-size:12px;font-weight:800;color:var(--accent);margin-bottom:4px;display:flex;justify-content:space-between}
+.kt span{color:var(--muted);font-weight:600}
+.g{display:grid;gap:6px}
+.g2{grid-template-columns:1fr 1fr}
+.g+.g{margin-top:6px}
+
+.cell label{display:block;font-size:11px;color:var(--muted);font-weight:600;margin-bottom:3px;white-space:nowrap}
+.res{margin-top:10px;padding:9px 10px;border-radius:10px;font-size:13px;background:var(--bg)}
+.res b{font-weight:800}
+.res.ok{background:var(--okbg);color:var(--ok)}
+.res.bad{background:var(--badbg);color:var(--bad)}
+.res.warn{background:var(--warnbg);color:var(--warn)}
+.res.mute{color:var(--muted)}
+.res small{display:block;font-size:12px;opacity:.9;margin-top:2px}
+.btn{width:100%;margin-top:4px;padding:11px;font-size:14px;font-weight:700;border:1px dashed var(--line);border-radius:10px;background:transparent;color:var(--accent);cursor:pointer}
+.opt{display:flex;gap:10px;align-items:center;font-size:14px;font-weight:600}
+.opt input{width:20px;height:20px;accent-color:var(--accent)}
+.sum .k{font-size:13px;color:var(--muted);font-weight:600}
+.sum .big{font-size:30px;font-weight:800;line-height:1.15}
+.pill{display:inline-block;padding:5px 11px;border-radius:99px;font-size:13px;font-weight:700;margin-top:8px}
+.pill.ok{background:var(--okbg);color:var(--ok)}
+.pill.bad{background:var(--badbg);color:var(--bad)}
+.pill.warn{background:var(--warnbg);color:var(--warn)}
+.hint{font-size:12px;color:var(--muted);margin:8px 4px 0}
+.reset{background:none;border:0;color:var(--muted);font-size:12px;text-decoration:underline;cursor:pointer;padding:0;margin:10px 4px 0}
+:root{--g1:#eef0ff;--g2:#fdeefa;--h1:#6366f1;--h2:#ec4899;--sh:0 8px 24px rgba(79,70,229,.12)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--g1:#14151f;--g2:#1d1530;--sh:0 8px 24px rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{--g1:#14151f;--g2:#1d1530;--sh:0 8px 24px rgba(0,0,0,.35)}
+body{background:linear-gradient(160deg,var(--g1),var(--g2));background-attachment:fixed;min-height:100vh}
+.hero{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--h1),var(--h2));color:#fff;border-radius:24px;padding:20px 18px;margin-bottom:14px;box-shadow:var(--sh);animation:pop .5s ease both}
+.hero:after{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.18)}
+.hero h1{color:#fff;margin:4px 0 2px;font-size:24px}
+.hero .sub{color:rgba(255,255,255,.9);margin:0}
+.hero .em{font-size:38px;display:inline-block;animation:bob 2.2s ease-in-out infinite}
+.card{border-radius:20px;box-shadow:var(--sh);transition:transform .2s,box-shadow .2s;animation:pop .45s ease both}
+#list .card:hover{transform:translateY(-2px)}
+#list .card{border-top:4px solid #6366f1}
+#list .card:nth-child(6n+2){border-top-color:#ec4899}
+#list .card:nth-child(6n+3){border-top-color:#f59e0b}
+#list .card:nth-child(6n+4){border-top-color:#10b981}
+#list .card:nth-child(6n+5){border-top-color:#0ea5e9}
+#list .card:nth-child(6n+6){border-top-color:#a855f7}
+.top{gap:10px}
+.semo{font-size:26px;line-height:1}
+input.name{font-size:17px;border:0;background:transparent;padding:6px 4px}
+input[type=text],input[type=number]{border-radius:12px;transition:box-shadow .2s,border-color .2s}
+input:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.25)}
+.kt{font-size:13px;letter-spacing:.2px}
+.res{border-radius:14px;line-height:1.5}
+.pill{font-size:14px;padding:7px 14px}
+.btn{border-radius:14px;border-style:solid;border-color:var(--accent);font-size:15px;transition:transform .15s}
+.btn:active{transform:scale(.97)}
+.sumrow{display:flex;gap:14px;align-items:center}
+.ring{width:84px;height:84px;flex:none}
+.rb{fill:none;stroke:var(--line);stroke-width:7}
+.rf{fill:none;stroke:var(--accent);stroke-width:7;stroke-linecap:round;transform:rotate(-90deg);transform-origin:32px 32px;transition:stroke-dasharray .6s ease}
+.rt{font-size:15px;font-weight:800;fill:var(--text)}
+.sum .big{background:linear-gradient(135deg,var(--h1),var(--h2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.confetti{position:fixed;top:-30px;font-size:24px;pointer-events:none;z-index:99;animation:fall 2.4s ease-in forwards}
+@keyframes pop{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-6px) rotate(6deg)}}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.9}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+:root:root:root{--bg:#05080f;--card:#0c1424;--text:#e8f1ff;--muted:#8aa0c2;--line:#1c2b47;--accent:#38bdf8;--ok:#34d399;--okbg:#0b2a24;--bad:#ff6b6b;--badbg:#2e1217;--warn:#fbbf24;--warnbg:#2c2410;--g1:#03060c;--g2:#07142b;--h1:#1d4ed8;--h2:#06b6d4;--sh:0 8px 28px rgba(14,116,244,.18);color-scheme:dark}
+body{background:radial-gradient(1200px 500px at 50% -10%,#0b2a5c 0%,transparent 60%),linear-gradient(180deg,var(--g1),var(--g2));background-attachment:fixed}
+.wrap{padding-bottom:120px}
+.card{border:1px solid var(--line)}
+#list .card{border-top:4px solid #3b82f6}
+#list .card:nth-child(6n+2){border-top-color:#06b6d4}
+#list .card:nth-child(6n+3){border-top-color:#22d3ee}
+#list .card:nth-child(6n+4){border-top-color:#6366f1}
+#list .card:nth-child(6n+5){border-top-color:#0ea5e9}
+#list .card:nth-child(6n+6){border-top-color:#2dd4bf}
+.hero{background:linear-gradient(135deg,#0b2e7a,#0e7490);border:1px solid rgba(56,189,248,.35);box-shadow:0 0 36px rgba(14,165,233,.25)}
+.hero h1,.hero .sub{position:relative;z-index:1}
+.fl{position:absolute;z-index:1;font-size:22px;opacity:.95;animation:bob 3s ease-in-out infinite}
+.f1{right:20px;top:14px}
+.f2{right:66px;top:56px;animation-delay:.5s}
+.f3{right:22px;bottom:12px;animation-delay:1s}
+.hero .em{filter:drop-shadow(0 0 10px rgba(56,189,248,.8))}
+input[type=text],input[type=number]{background:#071022;border-color:var(--line)}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(56,189,248,.3)}
+input.bad{border-color:var(--bad)!important;background:var(--badbg)!important;box-shadow:0 0 0 3px rgba(255,107,107,.25)}
+.semo{width:42px;height:42px;display:grid;place-items:center;border-radius:14px;font-size:22px;background:linear-gradient(135deg,rgba(59,130,246,.4),rgba(6,182,212,.3));box-shadow:0 0 14px rgba(56,189,248,.4)}
+.kt{color:var(--accent)}
+.sum .big{background:linear-gradient(135deg,#60a5fa,#22d3ee);-webkit-background-clip:text;background-clip:text;color:transparent}
+.rf{stroke:var(--accent);filter:drop-shadow(0 0 5px rgba(56,189,248,.8))}
+.btn{color:var(--accent);border-color:var(--accent);background:rgba(56,189,248,.06)}
+.bar{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:10px;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(5,8,15,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);z-index:50}
+.bt{flex:1;max-width:260px;padding:13px;border:0;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;color:#fff;font-family:inherit;transition:transform .15s}
+.bt:active{transform:scale(.96)}
+.bt-ok{background:linear-gradient(135deg,#2563eb,#06b6d4);box-shadow:0 6px 18px rgba(6,182,212,.35)}
+.bt-warn{background:#1c2b47;color:#8aa0c2}
+.bt-warn.on{background:linear-gradient(135deg,#dc2626,#f97316);color:#fff;animation:pulse 1.4s infinite}
+#wn{display:inline-block;min-width:22px;padding:1px 7px;border-radius:99px;background:rgba(255,255,255,.2);margin-left:4px}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--card);border:1px solid var(--accent);color:var(--text);padding:10px 16px;border-radius:99px;font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:90vw;text-align:center;box-shadow:0 0 20px rgba(56,189,248,.3)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:16px;z-index:70}
+.modal[hidden]{display:none}
+.mbox{background:var(--card);border:1px solid var(--bad);border-radius:20px;max-width:420px;width:100%;max-height:80vh;overflow:auto;padding:16px;box-shadow:0 0 40px rgba(255,107,107,.3);animation:pop .25s ease both}
+.mh{font-size:18px;font-weight:800;color:var(--bad);margin-bottom:8px}
+.mb{font-size:14px}
+.mb ul{padding-left:18px;margin:8px 0}
+.mf{margin-top:12px;display:flex}
+.mf .bt{max-width:none}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(249,115,22,.55)}50%{box-shadow:0 0 0 9px rgba(249,115,22,0)}}
+.res .mn{font-size:15px;line-height:1.5}
+.res .dt{margin-top:8px}
+.res .dt summary{cursor:pointer;font-size:12px;font-weight:700;opacity:.85}
+.gv .gt{font-size:16px;font-weight:800;margin-bottom:2px}
+.gv .gs{font-size:12px;color:var(--muted);margin-bottom:10px}
+.gv .gi{display:grid;grid-template-columns:2fr 1fr;gap:6px;margin-bottom:10px}
+.grp{border-radius:14px;padding:9px 11px;margin-top:8px;font-size:13px;line-height:1.5}
+.grp b.h{display:block;font-size:13px;margin-bottom:2px}
+.grp ul{margin:2px 0 0;padding-left:18px}
+.g-bad{background:var(--badbg);color:var(--bad)}
+.g-warn{background:var(--warnbg);color:var(--warn)}
+.g-ok{background:var(--okbg);color:var(--ok)}
+.g-mute{background:var(--bg);color:var(--muted)}
+.gv .btn{margin-top:10px}
+.ad summary{cursor:pointer;font-size:15px;font-weight:800}
+.ad textarea,.mbox textarea{width:100%;min-height:110px;font:inherit;font-size:14px;padding:9px;border-radius:12px;border:1px solid var(--line);background:#071022;color:var(--text);resize:vertical}
+.ad .st{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:800}
+.ad .st span{font-size:12px;font-weight:600;opacity:.85}
+.ad .btn{margin-top:0;padding:8px;font-size:13px;width:auto;flex:1}
+.ad .row{display:flex;gap:6px;margin-top:8px}
+.ad .st input{font-size:15px;font-weight:700;padding:6px 8px}
+.ad .st input.adc{max-width:92px}
+.ad .grp textarea{margin-top:8px;min-height:150px;color:var(--text)}
+.ad .grp li{color:inherit}
+body.mgmt .wrap>:not(.hero):not(#adcard):not(#mgdeny){display:none}
+body.mgmt .bar{display:none}
+.badge{display:inline-block;margin-left:6px;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;background:rgba(56,189,248,.15);color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero"><span class="em" id="hem">🎓</span><span class="fl f1">📐</span><span class="fl f2">✏️</span><span class="fl f3">🏆</span><h1 id="h1t">Tính điểm lên lớp</h1>
+  <p class="sub" id="subt">Nhập điểm các môn, trang tự tính số chia và điểm còn cần để lên lớp. Cố lên nhé! 💪</p></div>
+
+  <div class="hint" id="savest" style="margin:-4px 4px 10px">💾 Điểm bạn nhập được tự động lưu lại trên thiết bị này.</div>
+
+  <div class="card sum" id="sum"></div>
+
+  <div class="card gv">
+    <div class="gt">📤 Gửi điểm cho admin</div>
+    <div class="gs">Nhập họ tên và lớp rồi bấm Gửi cho admin. Chỉ admin xem được bài nộp của bạn. Nếu không gửi được, dùng nút sao chép rồi dán vào Zalo.</div>
+    <div class="gi"><input type="text" id="gvn" placeholder="Họ và tên" aria-label="Họ và tên" autocomplete="off"><input type="text" id="gvl" placeholder="Lớp" aria-label="Lớp" autocomplete="off"></div>
+    <div id="gvbody"></div>
+    <button class="btn" id="gvsend" type="button" style="background:linear-gradient(135deg,#2563eb,#06b6d4);color:#fff;border-color:transparent">🚀 Gửi cho admin</button>
+    <button class="btn" id="gvcopy" type="button">📋 Hoặc sao chép để gửi qua Zalo</button>
+  </div>
+
+  <div class="card" id="mgdeny" hidden><div class="grp g-bad">🔒 Trang quản lý chỉ dành cho giáo viên và admin. Hãy đăng nhập đúng tài khoản được cấp quyền.</div></div>
+
+  <div class="card ad" id="adcard" hidden>
+    <div style="font-size:16px;font-weight:800">🧑‍💼 Bài nộp của học sinh <span id="adcnt" style="color:var(--muted);font-weight:600"></span><span class="badge" id="adrole"></span></div>
+    <div style="font-size:12px;color:var(--muted);margin:2px 0 8px">Cần mật khẩu. Admin được sửa và xoá bài nộp; giáo viên chỉ xem và sao chép tin gửi phụ huynh.</div>
+    <div id="adsetup" hidden>
+      <div class="grp g-warn"><b class="h">Bước cuối: gắn kho lưu bài nộp</b>Dán link Apps Script (kết thúc bằng /exec) vào đây. Trang sẽ tạo sẵn link cho học sinh, bạn không cần sửa file.</div>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin:8px 0"><input type="text" id="adurl" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off"><button class="btn" id="adurlgo" type="button" style="width:auto;margin:0;padding:0 16px">Gắn</button></div>
+    </div>
+    <div id="adlinks" hidden>
+      <div class="gs" style="margin:0 0 4px">Link gửi cho học sinh (đã gắn sẵn kho lưu bài):</div>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin-bottom:8px"><input type="text" id="lks" readonly><button class="btn" id="lksc" type="button" style="width:auto;margin:0;padding:0 16px">Chép</button></div>
+      <div class="gs" style="margin:0 0 4px">Link quản lý (cho bạn và giáo viên):</div>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin-bottom:10px"><input type="text" id="lkm" readonly><button class="btn" id="lkmc" type="button" style="width:auto;margin:0;padding:0 16px">Chép</button></div>
+    </div>
+    <div id="adlogin"><div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin-bottom:8px"><input type="password" id="adpw" placeholder="Mật khẩu quản lý" aria-label="Mật khẩu quản lý" autocomplete="off"><button class="btn" id="adgo" type="button" style="width:auto;margin:0;padding:0 16px">Đăng nhập</button></div></div>
+    <div style="display:flex;gap:14px"><button class="reset" id="adrf" type="button" hidden style="margin:0 0 6px">🔄 Làm mới</button><button class="reset" id="adlo" type="button" hidden style="margin:0 0 6px">Đăng xuất</button></div>
+    <div id="adlive"><div class="grp g-mute">Đang tải...</div></div>
+    <details style="margin-top:10px">
+      <summary style="font-size:13px">Dự phòng: dán tin nhắn học sinh gửi qua Zalo</summary>
+      <textarea id="adin" style="margin-top:8px" placeholder="Dán tin nhắn học sinh gửi về ở đây..." aria-label="Tin nhắn học sinh"></textarea>
+      <div id="adout"></div>
+    </details>
+  </div>
+
+  <div class="card">
+    <label class="opt"><input type="checkbox" id="cd"> Tôi có học chuyên đề học tập</label>
+    <div class="hint" style="margin-left:0">Bỏ chọn thì cột chuyên đề sẽ ẩn và không tính vào số chia.</div>
+  </div>
+
+  <div id="list"></div>
+  <button class="btn" id="add" type="button">+ Thêm môn</button>
+
+  <p class="hint"><b>Cách nhập:</b> cột Thường xuyên + 15 phút nhập được nhiều điểm, cách nhau bằng dấu cách (ví dụ 8 7,5 9); tất cả cùng hệ số 1. Điểm nào chưa có thì để trống, trang sẽ tính ra điểm cần đạt cho các cột còn trống.</p>
+  <p class="hint"><b>Công thức</b> (Thông tư 22/2021): ĐTB môn học kì = (tổng điểm thường xuyên + 2 × giữa kì + 3 × cuối kì) / (số cột thường xuyên + 5). ĐTB môn cả năm = (HK I + 2 × HK II) / 3. Chuyên đề được tính như 1 cột thường xuyên của HK II. Điểm hiển thị lấy đến 0,1 (không làm tròn lên), cần từ 5,0 trở lên mới đạt.</p>
+  <p class="hint"><b>Điều kiện lên lớp:</b> mỗi môn cần đạt từ 5,0 trở lên (trang tính theo mức này). Quy định chính thức của trường có thể nới hơn, hãy hỏi giáo viên để chắc chắn.</p>
+  <button class="btn" id="demo" type="button">🧪 Điền dữ liệu mẫu để test</button>
+  <button class="reset" id="reset" type="button">Xoá hết, nhập lại</button>
+</div>
+
+<div class="bar"><button id="okb" class="bt bt-ok" type="button">✅ Xác nhận</button><button id="warnb" class="bt bt-warn" type="button">⚠️ Cảnh báo <span id="wn">0</span></button></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="modal" class="modal" hidden><div class="mbox" role="dialog" aria-modal="true" aria-labelledby="mt"><div class="mh" id="mt"></div><div class="mb" id="mbd"></div><div class="mf"><button id="mclose" class="bt bt-ok" type="button">Sửa ngay</button></div></div></div>
+<script>
+(function(){
+  var DEF=['Toán','Ngữ văn','Tiếng Anh','Vật lí','Hóa học','Sinh học','Lịch sử','Địa lí','GDCD','Tin học','Công nghệ'];
+  var KEY='tinhdiem-v3';
+  var S={cd:true,rows:[],info:{name:'',cls:''}};
+  var $=function(id){return document.getElementById(id)};
+  function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}
+  function f1(n){return (Math.round(n*10+1e-9)/10).toFixed(1).replace('.',',')}
+  function r1(n){return Math.round(n*10+1e-9)/10}
+  function ceil1(n){return Math.ceil(n*10-1e-9)/10}
+  function blank(){return {n:'',t1:'',g1:'',c1:'',t2:'',g2:'',c2:'',cd:''}}
+  function mig(r){['1','2'].forEach(function(k){var p=String(r['p'+k]||'').trim();if(p){r['t'+k]=(String(r['t'+k]||'').trim()+' '+p).trim()}delete r['p'+k]});return r}
+  function defaults(){return DEF.map(function(n){var r=blank();r.n=n;return r})}
+
+  function num(tok){
+    var t=String(tok).trim().replace(',','.');
+    var n=parseFloat(t);
+    return (isNaN(n)||!/^\d+(\.\d+)?$/.test(t))?NaN:n;
+  }
+  // một ô điểm: null = trống, 'bad' = sai, số = hợp lệ
+  function one(s){
+    var t=String(s==null?'':s).trim();
+    if(t==='')return null;
+    var n=num(t);
+    return (isNaN(n)||n<0||n>10)?'bad':n;
+  }
+  function toks(s){
+    var out={vals:[],bad:false};
+    String(s==null?'':s).split(/[\s;]+/).forEach(function(tk){
+      if(!tk)return;
+      var parts=[tk];
+      var commas=(tk.match(/,/g)||[]).length;
+      if(commas>=2||(commas>=1&&tk.indexOf('.')>=0))parts=tk.split(',');
+      parts.forEach(function(p){
+        if(!p)return;
+        var n=num(p);
+        if(isNaN(n)||n<0||n>10)out.bad=true;else out.vals.push(n);
+      });
+    });
+    return out;
+  }
+
+  function ky(tx,p,g,c,cd){
+    var t=toks(String(tx||'')+' '+String(p||'')),G=one(g),C=one(c),D=(cd===undefined)?null:one(cd);
+    var bad=t.bad||G==='bad'||C==='bad'||D==='bad';
+    var vals=t.vals.slice();
+    if(typeof D==='number')vals.push(D);
+    var sum=vals.reduce(function(a,b){return a+b},0);
+    var n=vals.length,div=n+5;
+    var gOk=typeof G==='number',cOk=typeof C==='number';
+    var has=t.vals.length>0||G!==null||C!==null||D!==null;
+    return {
+      const:(sum+(gOk?2*G:0)+(cOk?3*C:0))/div,
+      slope:((gOk?0:2)+(cOk?0:3))/div,
+      div:div,n:n,gb:!gOk,cb:!cOk,has:has,bad:bad
+    };
+  }
+
+  function subject(r){
+    var k1=ky(r.t1,'',r.g1,r.c1);
+    var k2=ky(r.t2,'',r.g2,r.c2,S.cd?r.cd:undefined);
+    if(!k1.has&&!k2.has)return {empty:true};
+    var mode=(k1.has&&k2.has)?'year':(k1.has?'k1':'k2');
+    var K=(k1.const+2*k2.const)/3,L=(k1.slope+2*k2.slope)/3;
+    if(mode==='k1'){K=k1.const;L=k1.slope}
+    if(mode==='k2'){K=k2.const;L=k2.slope}
+    var un=[];
+    if(mode!=='k2'&&k1.gb)un.push('giữa kì HK I');
+    if(mode!=='k2'&&k1.cb)un.push('cuối kì HK I');
+    if(mode!=='k1'&&k2.gb)un.push('giữa kì HK II');
+    if(mode!=='k1'&&k2.cb)un.push('cuối kì HK II');
+    return {k1:k1,k2:k2,K:K,L:L,un:un,mode:mode,bad:k1.bad||k2.bad,complete:L<1e-12};
+  }
+
+  function evalSub(s){
+    // trả về {cls,html,state}
+    if(s.empty)return {cls:'mute',html:'Nhập điểm để xem kết quả',state:'empty'};
+    var h='',cls,st;var nm=s.mode==='year'?'ĐTB năm':(s.mode==='k1'?'ĐTB HK I':'ĐTB HK II');
+    var line=function(k,name){
+      if(k.has&&k.slope<1e-12)return name+': <b>'+f1(k.const)+'</b> (chia '+k.div+')';
+      return name+': chưa đủ (chia '+k.div+')';
+    };
+    var hs=function(k,name){return '<br>• '+name+': '+k.n+' điểm ×1 + giữa kì ×2 + cuối kì ×3 = tổng hệ số <b>'+k.div+'</b>'};var head=(s.mode==='year')?('<small>'+line(s.k1,'HK I')+' · '+line(s.k2,'HK II')+'</small><small><b>Hệ số (tự động theo điểm đã nhập):</b>'+hs(s.k1,'HK I')+hs(s.k2,'HK II')+'<br>• Cả năm: HK I ×1 + HK II ×2 = tổng hệ số <b>3</b></small>'):('<small><b>Hệ số (tự động theo điểm đã nhập):</b>'+(s.mode==='k1'?hs(s.k1,'HK I'):hs(s.k2,'HK II'))+'<br>Chỉ tính học kì đã nhập. Nhập thêm học kì còn lại để tính cả năm.</small>');
+    var warn=s.bad?'<small>⚠️ Có ô nhập sai (điểm phải từ 0 đến 10), ô đó bị bỏ qua.</small>':'';
+    var det=function(x){return '<details class="dt"><summary>Xem chi tiết</summary>'+x+'</details>'};
+    var tbl='';
+    if(s.complete){
+      var y=Math.floor(s.K*10+1e-9)/10;
+      if(y>=5){cls='ok';st={t:'ok',y:y,hi:y>=8};h='<div class="mn">'+(y>=8?'🏆':'🎉')+' <b>Bạn đủ điểm!</b> '+nm+': <b>'+f1(y)+'</b></div>'}
+      else{cls='bad';st={t:'fail',y:y,low:y<3.5};h='<div class="mn">'+(y<3.5?'😭':'😢')+' <b>Chưa đủ điểm.</b> '+nm+': <b>'+f1(y)+'</b> (cần từ 5,0)</div>'}
+      return {cls:cls,html:h+det(head)+warn,state:st};
+    }
+    var n5=(5-s.K)/s.L;
+    var lab=s.un.join(', ');
+    if(n5<=0){
+      var y0=Math.floor(s.K*10+1e-9)/10;
+      return {cls:'ok',html:'<div class="mn">🎉 <b>Bạn đã đủ điểm</b>, không cần thêm điểm nào nữa (ĐTB tối thiểu '+f1(y0)+')</div>'+det(head)+warn,state:{t:'sure',hi:y0>=8}};
+    }
+    if(n5>10){
+      return {cls:'bad',html:'<div class="mn">😭 <b>Không thể đủ 5,0</b> (cần '+f1(n5)+' điểm, vượt quá 10)</div>'+det(head)+warn,state:{t:'fail',imp:true}};
+    }
+    h='<div class="mn">'+(n5>=8?'😰':(n5>=6.5?'😟':'💪'))+' Bạn cần <b>'+f1(ceil1(n5))+' điểm</b>'+(s.un.length>1?' (trung bình)':'')+' ở '+lab+(s.mode==='year'?' để lên lớp':' để '+nm+' đủ 5,0')+'</div>';
+    var kk=s.mode==='k1'?s.k1:(s.mode==='k2'?s.k2:null);
+    if(kk&&kk.gb&&kk.cb){
+      var gl1=[];
+      [4,5,6,7,8,9].forEach(function(g){
+        var c=(5*kk.div-kk.const*kk.div-2*g)/3;
+        gl1.push('giữa kì '+g+' → cuối kì '+(c<=0?'mức nào cũng đạt':(c>10?'không đủ':'≥ '+f1(ceil1(c)))));
+      });
+      tbl+='<small><b>Gợi ý nếu giữa kì được:</b><br>• '+gl1.join('<br>• ')+'</small>';
+    }
+    if(s.mode==='year'&&s.k1.slope<1e-12&&s.k1.has&&s.k2.gb&&s.k2.cb){
+      var D2=s.k2.div,gl=[];
+      [4,5,6,7,8,9].forEach(function(g){
+        var c=(((15-s.k1.const)/2)*D2-s.k2.const*D2-2*g)/3;
+        gl.push('giữa kì '+g+' → cuối kì '+(c<=0?'mức nào cũng đạt':(c>10?'không đủ':'≥ '+f1(ceil1(c)))));
+      });
+      tbl+='<small><b>Gợi ý nếu giữa kì HK II được:</b><br>• '+gl.join('<br>• ')+'</small>';
+    }
+    return {cls:n5>=8?'warn':'ok',html:h+det(head+tbl)+warn,state:{t:'need',n5:n5}};
+  }
+
+  function emo(n){var t=String(n||'').toLowerCase();var m=[['toán','➗'],['văn','📖'],['anh','🔤'],['lí','⚡'],['lý','⚡'],['hóa','🧪'],['hoá','🧪'],['sinh','🌱'],['sử','🏛️'],['địa','🌏'],['gdcd','⚖️'],['công dân','⚖️'],['tin','💻'],['công nghệ','🔧']];for(var i=0;i<m.length;i++){if(t.indexOf(m[i][0])>=0)return m[i][1]}return '📚'}
+  function burst(){var em=['🎉','🎊','✨','⭐','🎓'];for(var i=0;i<26;i++){(function(i){var s=document.createElement('span');s.className='confetti';s.textContent=em[i%em.length];s.style.left=(Math.random()*100)+'vw';s.style.animationDelay=(Math.random()*0.6)+'s';document.body.appendChild(s);setTimeout(function(){s.remove()},3300)})(i)}}
+  var ERR=[];
+  var LBL={t1:'Thường xuyên + 15 phút HK I',g1:'Giữa kì HK I',c1:'Cuối kì HK I',t2:'Thường xuyên + 15 phút HK II',g2:'Giữa kì HK II',c2:'Cuối kì HK II',cd:'Chuyên đề'};
+  function validate(){
+    ERR=[];
+    S.rows.forEach(function(r,i){
+      Object.keys(LBL).forEach(function(f){
+        if(f==='cd'&&!S.cd)return;
+        var v=r[f],bad=(f==='t1'||f==='t2')?toks(v).bad:one(v)==='bad';
+        var el=document.querySelector('#list input[data-i="'+i+'"][data-f="'+f+'"]');
+        if(el)el.classList.toggle('bad',bad);
+        if(bad)ERR.push({i:i,f:f,m:(r.n||('Môn '+(i+1)))+' – '+LBL[f]+': “'+String(v).trim()+'”'});
+      });
+    });
+    $('wn').textContent=ERR.length;
+    $('warnb').classList.toggle('on',ERR.length>0);
+  }
+  function toast(t){var e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){e.classList.remove('show')},2600)}
+  function closeModal(){$('modal').hidden=true}
+  function showErrors(){
+    if(!ERR.length){toast('Không có lỗi nào, điểm hợp lệ 👍');return}
+    $('mt').textContent='⚠️ Cảnh báo nhập sai điểm';$('mclose').textContent='Sửa ngay';
+    $('mbd').innerHTML='<p>Có '+ERR.length+' ô nhập sai. Điểm phải là số từ 0 đến 10 (ví dụ 8,5). Điểm thường xuyên và 15 phút cách nhau bằng dấu cách.</p><ul>'+ERR.map(function(e){return '<li>'+esc(e.m)+'</li>'}).join('')+'</ul>';
+    $('modal').hidden=false;
+  }
+  function goFirst(){
+    var e=ERR[0];if(!e)return;
+    var el=document.querySelector('#list input[data-i="'+e.i+'"][data-f="'+e.f+'"]');
+    if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.focus()}
+  }
+  function calc(){validate();
+    var cnt=0,sure=0,fail=0,low=0,need=0,done=0,sumY=0,all=true,partial=false,items=[];
+    S.rows.forEach(function(r,i){
+      var s=subject(r),e=evalSub(s),el=$('rs'+i);
+      if(el){var wasOpen=el.querySelector('details.dt[open]');el.className='res '+e.cls;el.innerHTML=e.html;if(wasOpen){var dd=el.querySelector('details.dt');if(dd)dd.open=true}}
+      var se=$('se'+i);
+      if(se){
+        var ic=emo(r.n),st0=e.state;
+        if(!s.empty){
+          if(st0.t==='ok'||st0.t==='sure')ic=st0.hi?'🏆':'🎉';
+          else if(st0.t==='fail')ic=(st0.imp||st0.low)?'😭':'😢';
+          else if(st0.t==='need')ic=st0.n5>=8?'😰':(st0.n5>=6.5?'😟':'💪');
+        }
+        se.textContent=ic;
+      }
+      if(s.empty)return;
+      cnt++;if(s.mode!=='year')partial=true;
+      var t=e.state.t;
+      items.push({n:r.n||('Môn '+(i+1)),st:e.state,s:s});
+      if(t==='ok'||t==='sure')sure++;
+      if(t==='fail')fail++;
+      if(t==='low')low++;
+      if(t==='need'||t==='low')all=all&&s.complete;
+      if(!s.complete)all=false;
+      if(s.complete){done++;sumY+=e.state.y}
+      if(t==='need')need++;
+    });
+    var h='';
+    renderGV(items);
+    var hem=$('hem');
+    if(hem)hem.textContent=cnt===0?'🎓':(fail>0?'😢':((all&&done===cnt&&sure===cnt)?'🎉':(need>0?'💪':'🎓')));
+    if(cnt===0){$('sum').innerHTML='<div class="k">Nhập điểm để xem kết quả</div>';return}
+    if(partial){
+      h='<div class="k">Kết quả theo học kì đã nhập</div><div class="big">'+sure+'/'+cnt+' môn</div><div class="k">đã chắc chắn từ 5,0 ở học kì đang nhập</div>';
+      if(fail>0)h+='<span class="pill bad">'+fail+' môn không thể đạt 5,0 😢</span>';
+      else h+='<span class="pill warn">Nhập đủ HK I và HK II để xét lên lớp</span>';
+    }else if(all&&done===cnt){
+      var avg=sumY/done;
+      h='<div class="k">ĐTB các môn cả năm</div><div class="big">'+f1(avg)+'</div>';
+      var okAll=sure===cnt&&fail===0;
+      if(okAll&&low===0)h+='<span class="pill ok">Đủ điều kiện điểm để lên lớp 🎉</span>';
+      else if(okAll)h+='<span class="pill warn">Đủ điều kiện lên lớp, nhưng '+low+' môn dưới 5,0 phải kiểm tra lại</span>';
+      
+      else h+='<span class="pill bad">Chưa đủ điều kiện lên lớp 😢</span>';
+      h+='<div class="hint" style="margin-left:0">Có '+sure+'/'+cnt+' môn từ 5,0'+(fail?', '+fail+' môn chưa đạt':'')+'.</div>';
+    }else{
+      h='<div class="k">Tình hình hiện tại</div><div class="big">'+sure+'/'+cnt+' môn</div><div class="k">đã chắc chắn từ 5,0 (cần tất cả các môn)</div>';
+      if(fail>0)h+='<span class="pill bad">'+fail+' môn không thể đạt 5,0 😢</span>';
+      else h+='<span class="pill warn">Còn '+need+' môn cần thêm điểm</span>';
+      h+='<div class="hint" style="margin-left:0">Xem điểm cần đạt ở từng môn bên dưới.</div>';
+    }
+    var pct=cnt?Math.min(1,sure/cnt):0,C=2*Math.PI*26;
+    $('sum').innerHTML='<div class="sumrow"><svg class="ring" viewBox="0 0 64 64" aria-label="Số môn đạt trên 6"><circle cx="32" cy="32" r="26" class="rb"/><circle cx="32" cy="32" r="26" class="rf" style="stroke-dasharray:'+(C*pct).toFixed(1)+' '+C.toFixed(1)+'"/><text x="32" y="37" text-anchor="middle" class="rt">'+sure+'/'+cnt+'</text></svg><div>'+h+'</div></div>';
+    var okNow=(all&&done===cnt&&sure===cnt&&fail===0);
+    if(okNow&&!window.__ok)burst();
+    window.__ok=okNow;
+  }
+
+  var GVTXT='',GVDATA=null;
+  function renderGV(items){
+    var bad=[],warn=[],ok=[];
+    items.forEach(function(it){
+      var st=it.st,t=st.t,txt;
+      if(t==='fail'){
+        txt=st.imp?'không thể đạt 5,0 dù thi tốt':('ĐTB '+f1(st.y)+', chưa đạt 5,0');
+        bad.push({n:it.n,t:txt});
+      }else if(t==='need'){
+        var need=f1(ceil1(st.n5));
+        txt='cần '+need+' điểm'+(it.s.un.length?' ở '+it.s.un.join(', '):'')+(it.s.mode==='year'?' để lên lớp':' để đủ 5,0');
+        (st.n5>=8?bad:warn).push({n:it.n,t:txt+(st.n5>=8?' (rất khó)':'')});
+      }else if(t==='ok'||t==='sure'){
+        ok.push({n:it.n,t:st.y!=null?('ĐTB '+f1(st.y)):'đã đủ điểm'});
+      }
+    });
+    var nm=(S.info&&S.info.name||'').trim(),cl=(S.info&&S.info.cls||'').trim();
+    var T='📣 BÁO CÁO ĐIỂM GỬI ADMIN\n';
+    if(nm)T+='Học sinh: '+nm+'\n';
+    if(cl)T+='Lớp: '+cl+'\n';
+    var grp=function(cls,ic,title,arr,plain){
+      if(!arr.length)return '';
+      T+='\n'+ic+' '+title+' ('+arr.length+' môn):\n'+arr.map(function(a){return '- '+a.n+': '+a.t}).join('\n')+'\n';
+      return '<div class="grp '+cls+'"><b class="h">'+ic+' '+title+' ('+arr.length+' môn)</b><ul>'+arr.map(function(a){return '<li><b>'+esc(a.n)+'</b>: '+esc(a.t)+'</li>'}).join('')+'</ul></div>';
+    };
+    var h='';
+    if(!items.length){
+      GVTXT='';GVDATA=null;
+      $('gvbody').innerHTML='<div class="grp g-mute">Nhập điểm các môn để tạo báo cáo.</div>';
+      return;
+    }
+    h+=grp('g-bad','🚨','Nguy cơ chưa đạt',bad);
+    h+=grp('g-warn','⚠️','Cần cố gắng thêm',warn);
+    h+=grp('g-ok','🎉','Đã đạt',ok);
+    if(!bad.length&&!warn.length)h='<div class="grp g-ok"><b class="h">🎉 Không có môn nào cần cảnh báo</b></div>'+h;
+    T+='\n(Tự tính từ trang, mang tính tham khảo)';
+    try{T+='\n\nMã đọc tự động (đừng xoá dòng này): GV1:'+btoa(unescape(encodeURIComponent(JSON.stringify({n:nm,c:cl,b:bad,w:warn,o:ok}))))}catch(e){}
+    GVTXT=T;GVDATA={n:nm,c:cl,b:bad,w:warn,o:ok};
+    $('gvbody').innerHTML=h;
+  }
+  function copyText(t,done){
+    function fb(){var a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();var ok=false;try{ok=document.execCommand('copy')}catch(e){}a.remove();done(ok)}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){done(true)},fb)}else fb();
+  }
+  function showText(t){
+    $('mt').textContent='📋 Chọn toàn bộ và sao chép';
+    $('mbd').innerHTML='<textarea readonly id="mtx"></textarea>';
+    $('mtx').value=t;$('mclose').textContent='Đóng';$('modal').hidden=false;
+    setTimeout(function(){var x=$('mtx');if(x){x.focus();x.select()}},50);
+  }
+  function doCopy(t,msg){copyText(t,function(ok){if(ok)toast(msg);else showText(t)})}
+  var ADL=[];
+  function parseMsgs(txt){
+    var map={},order=[],re=/GV1:([A-Za-z0-9+\/=]+)/g,m;
+    while((m=re.exec(txt))){
+      try{
+        var d=JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+        var k=(d.n||'')+'|'+(d.c||'');
+        if(!(k in map))order.push(k);
+        map[k]=d;
+      }catch(e){}
+    }
+    return order.map(function(k){return map[k]});
+  }
+  function parentText(d){
+    var T='Kính gửi Quý phụ huynh,\nXin thông báo tình hình điểm hiện tại của em '+(d.n||'(chưa ghi tên)')+(d.c?' - lớp '+d.c:'')+':\n';
+    var sec=function(ic,t,a){if(Array.isArray(a)&&a.length)T+='\n'+ic+' '+t+':\n'+a.map(function(x){return '- '+x.n+': '+x.t}).join('\n')+'\n'};
+    sec('🚨','Môn có nguy cơ chưa đạt',d.b);
+    sec('⚠️','Môn cần cố gắng thêm',d.w);
+    sec('🎉','Môn đã đạt',d.o);
+    T+='\n(Số liệu do em tự tính, mang tính tham khảo.)\nKính mong Quý phụ huynh quan tâm, đồng hành và nhắc nhở em ôn tập. Trân trọng.';
+    return T;
+  }
+  function renderAd(){
+    ADL=parseMsgs($('adin').value);
+    var out=$('adout');
+    if(!$('adin').value.trim()){out.innerHTML='';return}
+    if(!ADL.length){out.innerHTML='<div class="grp g-mute" style="margin-top:8px">Chưa đọc được tin nào. Hãy dán nguyên tin nhắn, gồm cả dòng "Mã đọc tự động".</div>';return}
+    out.innerHTML=ADL.map(function(d,i){
+      var b=(Array.isArray(d.b)?d.b:[]).length,w=(Array.isArray(d.w)?d.w:[]).length,o=(Array.isArray(d.o)?d.o:[]).length;
+      var cls=b?'g-bad':(w?'g-warn':'g-ok'),ic=b?'🚨':(w?'⚠️':'🎉');
+      var li=function(a){return (Array.isArray(a)?a:[]).map(function(x){return '<li><b>'+esc(x.n)+'</b>: '+esc(x.t)+'</li>'}).join('')};
+      return '<div class="grp '+cls+'"><div class="st">'+ic+' '+esc(d.n||'(chưa ghi tên)')+'<span>'+esc(d.c||'')+'</span></div><ul>'+li(d.b)+li(d.w)+'</ul><div style="font-size:12px;opacity:.9">'+b+' nguy cơ · '+w+' cần cố gắng · '+o+' đã đạt</div><button class="btn" data-ad="'+i+'" type="button">📋 Sao chép tin gửi phụ huynh</button></div>';
+    }).join('');
+  }
+  function fld(i,f,label,type,ph,cls){
+    var bad='';
+    return '<div class="cell"><label>'+label+'</label><input data-i="'+i+'" data-f="'+f+'" type="'+(type||'text')+'" '+(type==='number'?'inputmode="decimal" step="0.01" min="0" max="10" ':'inputmode="text" autocomplete="off" ')+'value="'+esc(S.rows[i][f])+'" placeholder="Nhập điểm" aria-label="'+label+'"></div>';
+  }
+
+  function render(){
+    $('cd').checked=S.cd;
+    var h='';
+    S.rows.forEach(function(r,i){
+      h+='<div class="card"><div class="top"><span class="semo" id="se'+i+'">'+emo(r.n)+'</span><input class="name" type="text" data-i="'+i+'" data-f="n" value="'+esc(r.n)+'" placeholder="Tên môn" aria-label="Tên môn"><button class="del" data-del="'+i+'" type="button" aria-label="Xoá môn">×</button></div>'
+       +'<div class="ky"><div class="kt">🌱 HK I <span>× 1 vào ĐTB năm</span></div><div class="g">'
+       +fld(i,'t1','📝 Thường xuyên + 15 phút ×1','text')+'</div><div class="g g2">'+fld(i,'g1','📘 Giữa kì ×2','number')+fld(i,'c1','🏁 Cuối kì ×3','number')
+       +'</div></div>'
+       +'<div class="ky"><div class="kt">🔥 HK II <span>× 2 vào ĐTB năm</span></div><div class="g">'
+       +fld(i,'t2','📝 Thường xuyên + 15 phút ×1','text')+'</div><div class="g g2">'+fld(i,'g2','📘 Giữa kì ×2','number')+fld(i,'c2','🏁 Cuối kì ×3','number')
+       
+       +'</div></div>'
+       +(S.cd?'<div class="ky"><div class="kt">Chuyên đề học tập <span>tính như 1 điểm thường xuyên HK II</span></div><div class="g g2">'+fld(i,'cd','🎯 Điểm chuyên đề','number')+'</div></div>':'')+'<div class="res mute" id="rs'+i+'"></div></div>';
+    });
+    $('list').innerHTML=h;
+    calc();
+  }
+
+  function save(){S.ts=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}cloudSave()}
+  function load(){
+    try{
+      var d=JSON.parse(localStorage.getItem(KEY)||'null');
+      if(d&&d.rows&&d.rows.length){d.rows.forEach(mig);S=d;if(!S.info)S.info={name:'',cls:''};if(typeof S.cd!=='boolean')S.cd=true;return}
+    }catch(e){}
+    S={cd:true,rows:defaults(),info:{name:'',cls:''}};
+  }
+
+  $('list').addEventListener('input',function(e){
+    var t=e.target,i=t.getAttribute('data-i'),f=t.getAttribute('data-f');
+    if(i===null)return;
+    S.rows[+i][f]=t.value;save();calc();
+  });
+  $('list').addEventListener('click',function(e){
+    var d=e.target.getAttribute('data-del');
+    if(d===null)return;
+    S.rows.splice(+d,1);save();render();
+  });
+  $('add').addEventListener('click',function(){
+    S.rows.push(blank());save();render();
+    var ins=$('list').querySelectorAll('input[data-f="n"]');
+    if(ins.length)ins[ins.length-1].focus();
+  });
+  $('cd').addEventListener('change',function(){S.cd=$('cd').checked;save();render()});
+  $('reset').addEventListener('click',function(){S={cd:S.cd,rows:defaults(),info:S.info};save();render()});
+  var SAMPLE=[
+    {n:'Toán',t1:'3 3,5 6',g1:'6.5',c1:'',t2:'',g2:'',c2:'',cd:''},
+    {n:'Ngữ văn',t1:'4 4',g1:'4',c1:'4',t2:'6 5 7',g2:'',c2:'',cd:''},
+    {n:'Tiếng Anh',t1:'8 7 9 8',g1:'7',c1:'8',t2:'8 9 7',g2:'8',c2:'8.5',cd:''},
+    {n:'Vật lí',t1:'3 4 4',g1:'3',c1:'4',t2:'4 3 5',g2:'4',c2:'4',cd:''},
+    {n:'Hóa học',t1:'7 8 6',g1:'7',c1:'7',t2:'7 8',g2:'',c2:'',cd:''}
+  ];
+  $('demo').addEventListener('click',function(){
+    S.rows=SAMPLE.map(function(r){var o={};for(var k in r)o[k]=r[k];return mig(o)});
+    save();render();window.scrollTo({top:0,behavior:'smooth'});toast('🧪 Đã điền 5 môn mẫu, hãy xem kết quả từng môn');
+  });
+
+  $('okb').addEventListener('click',function(){
+    validate();
+    if(ERR.length){showErrors();return}
+    var any=S.rows.some(function(r){return !subject(r).empty});
+    if(!any){toast('Bạn chưa nhập điểm nào 📝');return}
+    toast('✅ Đã xác nhận! Tất cả điểm hợp lệ');
+    window.scrollTo({top:0,behavior:'smooth'});
+    if(window.__ok)burst();
+  });
+  $('warnb').addEventListener('click',function(){validate();showErrors()});
+  $('mclose').addEventListener('click',function(){closeModal();goFirst()});
+  $('modal').addEventListener('click',function(e){if(e.target===$('modal'))closeModal()});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal()});
+  $('gvn').addEventListener('input',function(){S.info.name=this.value;save();calc()});
+  $('gvl').addEventListener('input',function(){S.info.cls=this.value;save();calc()});
+  $('gvsend').addEventListener('click',function(){
+    if(!GVTXT||!GVDATA){toast('Chưa có điểm để gửi 📝');return}
+    var nm=(S.info.name||'').trim();
+    if(!nm){toast('Nhập họ tên trước khi gửi ✍️');$('gvn').focus();return}
+    var fb=function(){doCopy(GVTXT,'Chưa gửi được lên hệ thống, đã sao chép tin để bạn gửi qua Zalo')};
+    if(!SHEET){doCopy(GVTXT,'Link này chưa gắn kho lưu bài nên chỉ sao chép được tin để gửi qua Zalo. Hãy dùng đúng link học sinh do admin gửi.');return}
+    var doc={action:'submit',id:getLid(),n:nm.slice(0,60),c:(S.info.cls||'').trim().slice(0,20),b:GVDATA.b,w:GVDATA.w,o:GVDATA.o};
+    post(doc).then(function(){toast('✅ Đã gửi cho admin! Sửa điểm rồi gửi lại sẽ cập nhật bài cũ')},fb);
+  });
+  $('gvcopy').addEventListener('click',function(){
+    if(!GVTXT){toast('Chưa có điểm để báo cáo 📝');return}
+    if(!(S.info.name||'').trim()){toast('Nhập họ tên trước khi gửi ✍️');$('gvn').focus();return}
+    doCopy(GVTXT,'📤 Đã sao chép, dán gửi cho admin nhé');
+  });
+  $('adin').addEventListener('input',renderAd);
+  $('adout').addEventListener('click',function(e){
+    var i=e.target.getAttribute('data-ad');if(i===null||!ADL[+i])return;
+    doCopy(parentText(ADL[+i]),'📋 Đã sao chép tin gửi phụ huynh');
+  });
+  var DB=null,UID=null,ADB=[],ADCUR={},ADP=false,ROLE=null,ACC=null,STARTED=false,SUB0=$('subt').textContent;
+  var SHEET='';  // (không bắt buộc) có thể dán sẵn link Apps Script vào đây; hoặc gắn ngay trên trang quản lý
+  var SHEET_RE=/^https:\/\/script\.google\.com\/[\w\-\/.]+\/exec$/;
+  try{var qs=new URLSearchParams(location.search).get('s');if(qs&&SHEET_RE.test(qs)){SHEET=qs;try{localStorage.setItem('tdsheet',qs)}catch(e){}}else if(!SHEET){var st=localStorage.getItem('tdsheet')||'';if(SHEET_RE.test(st))SHEET=st}}catch(e){}
+  var LASTTS=0,LOADED=false;
+  var KEYV='';try{KEYV=sessionStorage.getItem('tdkey')||''}catch(e){}
+  function getLid(){var k='tinhdiem-id',v=null;try{v=localStorage.getItem(k)}catch(e){}if(!v){v='s'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);try{localStorage.setItem(k,v)}catch(e){}}return v}
+  function post(o){return fetch(SHEET,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(o)})}
+  function arr(a){return Array.isArray(a)?a:[]}
+  function renderLive(){
+    var box=$('adlive');
+    $('adcnt').textContent=ADB.length?'('+ADB.length+')':'';
+    if(!ADB.length){box.innerHTML='<div class="grp g-mute">Chưa có bài nộp nào.</div>';return}
+    ADCUR={};
+    try{
+      box.innerHTML=ADB.map(function(x){
+        var ro=ROLE==='admin'?'':' readonly';var d=x.d,b=arr(d.b).length,w=arr(d.w).length,o=arr(d.o).length;
+        ADCUR[x.id]={n:d.n,c:d.c};
+        var cls=b?'g-bad':(w?'g-warn':'g-ok'),ic=b?'🚨':(w?'⚠️':'🎉');
+        var li=function(a){return arr(a).map(function(y){return '<li><b>'+esc(y&&y.n)+'</b>: '+esc(y&&y.t)+'</li>'}).join('')};
+        var when=d.ts?new Date(d.ts).toLocaleString('vi-VN'):'';
+        return '<div class="grp '+cls+'" data-id="'+esc(x.id)+'"><div class="st">'+ic+'<input class="adn" type="text"'+ro+' value="'+esc(d.n)+'" aria-label="Họ tên" placeholder="Họ tên"><input class="adc" type="text"'+ro+' value="'+esc(d.c)+'" aria-label="Lớp" placeholder="Lớp"></div><ul>'+li(d.b)+li(d.w)+'</ul><div style="font-size:12px;opacity:.9">'+b+' nguy cơ · '+w+' cần cố gắng · '+o+' đã đạt'+(when?' · gửi lúc '+esc(when):'')+'</div><textarea class="adt" aria-label="Tin gửi phụ huynh">'+esc(d.pt||parentText(d))+'</textarea><div class="row"><button class="btn" data-act="copy" type="button">📋 Sao chép</button>'+(ROLE==='admin'?'<button class="btn" data-act="save" type="button">💾 Lưu sửa</button><button class="btn" data-act="del" type="button">🗑️ Xoá</button>':'')+'</div></div>';
+      }).join('');
+    }catch(e){box.innerHTML='<div class="grp g-mute">Có dữ liệu không đọc được.</div>'}
+  }
+  function safeArr(x){if(Array.isArray(x))return x;try{var a=JSON.parse(x);return Array.isArray(a)?a:[]}catch(e){return []}}
+  function logout(){KEYV='';ROLE=null;LOADED=false;LASTTS=0;ADB=[];try{sessionStorage.removeItem('tdkey')}catch(e){}applyMg()}
+  function loadList(){
+    if(!LOADED)$('adlive').innerHTML='<div class="grp g-mute">Đang tải...</div>';
+    fetch(SHEET+'?action=list&key='+encodeURIComponent(KEYV)).then(function(r){return r.json()}).then(function(j){
+      if(!j||!j.ok){toast('Sai mật khẩu hoặc chưa có quyền');logout();return}
+      ROLE=j.role;$('adrole').textContent=ROLE==='admin'?'Admin':'Giáo viên (chỉ xem)';
+      ADB=(j.rows||[]).map(function(r){return {id:String(r.id),d:{n:r.n,c:r.c,b:safeArr(r.b),w:safeArr(r.w),o:safeArr(r.o),ts:Number(r.ts)||0,pt:r.pt||''}}}).sort(function(a,b){return b.d.ts-a.d.ts});
+      var mx=0,nw=0;ADB.forEach(function(x){if(x.d.ts>mx)mx=x.d.ts;if(LOADED&&x.d.ts>LASTTS)nw++});
+      if(LOADED&&nw>0)toast('🔔 Có '+nw+' bài nộp mới');
+      LASTTS=Math.max(LASTTS,mx);LOADED=true;
+      var ae=document.activeElement;
+      if(ae&&$('adlive').contains(ae)&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA')){ADP=true;return}
+      renderLive();
+    }).catch(function(){$('adlive').innerHTML='<div class="grp g-mute">Không tải được dữ liệu. Kiểm tra mạng hoặc link Apps Script rồi bấm Làm mới.</div>'});
+  }
+  $('adlive').addEventListener('focusout',function(){
+    if(!ADP)return;
+    setTimeout(function(){var a=document.activeElement;if(a&&$('adlive').contains(a)&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'))return;ADP=false;renderLive()},0);
+  });
+  $('adlive').addEventListener('input',function(e){
+    var t=e.target;if(t.className!=='adn'&&t.className!=='adc')return;
+    var card=t.closest('[data-id]'),id=card.getAttribute('data-id'),x=ADB.filter(function(r){return r.id===id})[0];
+    if(!x)return;
+    var ta=card.querySelector('textarea'),old=ADCUR[id]||{};
+    var nw={n:card.querySelector('.adn').value,c:card.querySelector('.adc').value};
+    if(ta.value===parentText(Object.assign({},x.d,old)))ta.value=parentText(Object.assign({},x.d,nw));
+    ADCUR[id]=nw;
+  });
+  $('adlive').addEventListener('click',function(e){
+    var btn=e.target.closest('button[data-act]');if(!btn)return;
+    var card=btn.closest('[data-id]'),id=card.getAttribute('data-id'),act=btn.getAttribute('data-act');
+    var x=ADB.filter(function(r){return r.id===id})[0];
+    if(act==='copy'){doCopy(card.querySelector('textarea').value,'📋 Đã sao chép tin gửi phụ huynh');return}
+    if(!SHEET||!KEYV||ROLE!=='admin')return;
+    if(act==='save'&&x){
+      var nw={n:card.querySelector('.adn').value.trim().slice(0,60),c:card.querySelector('.adc').value.trim().slice(0,20)};
+      var val=card.querySelector('textarea').value;
+      nw.pt=(val===parentText(Object.assign({},x.d,nw)))?'':val;
+      post({action:'update',key:KEYV,id:id,n:nw.n,c:nw.c,pt:nw.pt}).then(function(){toast('💾 Đã lưu chỉnh sửa');setTimeout(loadList,1500)},function(){toast('Không lưu được, thử lại nhé')});
+    }
+    if(act==='del'){
+      if(!btn.getAttribute('data-armed')){
+        btn.setAttribute('data-armed','1');btn.textContent='⚠️ Bấm lần nữa để xoá';
+        setTimeout(function(){btn.removeAttribute('data-armed');btn.textContent='🗑️ Xoá'},3000);return;
+      }
+      post({action:'delete',key:KEYV,id:id}).then(function(){toast('🗑️ Đã xoá bài nộp');setTimeout(loadList,1500)},function(){toast('Không xoá được, thử lại nhé')});
+    }
+  });
+  var CT=null;
+  function setSt(t){var e=$('savest');if(e)e.textContent=t}
+  function cloudSave(){
+    if(!DB||!UID)return;
+    clearTimeout(CT);
+    CT=setTimeout(function(){
+      DB.doc('data/users/'+UID+'/scores').set({s:JSON.stringify(S),ts:S.ts||Date.now()}).then(
+        function(){setSt('☁️ Đã lưu lên tài khoản của bạn, mở lại link này bất cứ lúc nào để xem')},
+        function(){setSt('💾 Đã lưu trên thiết bị này (chưa lưu được lên tài khoản)')});
+    },1200);
+  }
+  function cloudLoad(){
+    if(!DB||!UID)return;
+    DB.doc('data/users/'+UID+'/scores').get().then(function(snap){
+      var d=snap&&snap.data&&snap.data();
+      if(d&&d.s&&(d.ts||0)>(S.ts||0)){
+        try{
+          var n=JSON.parse(d.s);
+          if(n&&n.rows&&n.rows.length){
+            n.rows.forEach(mig);if(!n.info)n.info={name:'',cls:''};if(typeof n.cd!=='boolean')n.cd=true;n.ts=d.ts;S=n;
+            try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+            $('gvn').value=S.info.name||'';$('gvl').value=S.info.cls||'';render();
+            setSt('☁️ Đã tải lại điểm bạn đã lưu trước đó');
+          }
+        }catch(e){}
+      }else if(S.ts&&(!d||S.ts>(d.ts||0))){cloudSave()}
+      else if(d){setSt('☁️ Điểm của bạn được lưu trên tài khoản, mở lại link này bất cứ lúc nào để xem')}
+    },function(){});
+  }
+  function isMg(){return location.hash==='#quan-ly'}
+  function route(){
+    var m=isMg();document.body.classList.toggle('mgmt',m);
+    if(m){$('h1t').textContent='Quản lý bài nộp';$('subt').textContent='Dành cho giáo viên và admin. Cần mật khẩu để xem.';$('hem').textContent='🧑‍🏫'}
+    else{$('h1t').textContent='Tính điểm lên lớp';$('subt').textContent=SUB0;calc()}
+    applyMg();
+  }
+  function showLinks(){
+    var base=location.href.split('#')[0].split('?')[0],q='?s='+encodeURIComponent(SHEET);
+    $('lks').value=base+q;$('lkm').value=base+q+'#quan-ly';
+  }
+  function applyMg(){
+    var m=isMg();
+    $('adcard').hidden=!m;$('mgdeny').hidden=true;
+    if(!m)return;
+    $('adsetup').hidden=!!SHEET;$('adlinks').hidden=!SHEET;
+    if(!SHEET){$('adlogin').hidden=true;$('adlo').hidden=true;$('adrf').hidden=true;$('adlive').innerHTML='';return}
+    showLinks();
+    $('adlo').hidden=!KEYV;$('adrf').hidden=!KEYV;$('adlogin').hidden=!!KEYV;
+    if(KEYV)loadList();else{$('adlive').innerHTML='';$('adcnt').textContent='';$('adrole').textContent=''}
+  }
+  function initDb(){
+    route();
+    $('adgo').addEventListener('click',function(){var v=$('adpw').value.trim();if(!v)return;KEYV=v;try{sessionStorage.setItem('tdkey',v)}catch(e){}$('adpw').value='';applyMg()});
+    $('adpw').addEventListener('keydown',function(e){if(e.key==='Enter')$('adgo').click()});
+    $('adrf').addEventListener('click',loadList);
+    $('adlo').addEventListener('click',logout);
+    $('adurlgo').addEventListener('click',function(){
+      var v=$('adurl').value.trim();
+      if(!SHEET_RE.test(v)){toast('Link chưa đúng: phải bắt đầu bằng https://script.google.com và kết thúc bằng /exec');return}
+      SHEET=v;try{localStorage.setItem('tdsheet',v)}catch(e){}applyMg();toast('✅ Đã gắn kho lưu bài nộp');
+    });
+    $('lksc').addEventListener('click',function(){doCopy($('lks').value,'📋 Đã sao chép link cho học sinh')});
+    $('lkmc').addEventListener('click',function(){doCopy($('lkm').value,'📋 Đã sao chép link quản lý')});
+    setInterval(function(){if(isMg()&&KEYV&&SHEET&&!document.hidden)loadList()},20000);
+  }
+  window.addEventListener('hashchange',route);
+  load();$('gvn').value=S.info.name||'';$('gvl').value=S.info.cls||'';render();initDb();
+})();
+</script>
+</body>
+</html>
